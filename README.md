@@ -1,9 +1,9 @@
 # Refined Types in Practice
 
 This repository contains the slides and accompanying code + tests for a talk I gave at 
-[Scalax 2017](https://skillsmatter.com/conferences/8784-scala-exchange-2017)
+[BeScala](https://www.meetup.com/BeScala/events/248431138/)
 
-Slides available at: https://kwark.github.io/refined-in-practice
+Slides available at: https://kwark.github.io/refined-in-practice-bescala
 
 Presentation was made with:
 * [remark](https://github.com/gnab/remark)

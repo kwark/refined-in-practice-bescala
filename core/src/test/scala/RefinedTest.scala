@@ -1,5 +1,6 @@
 import eu.timepit.refined.collection.NonEmpty
 import org.scalatest.{FunSuite, Matchers}
+import refinements.Name
 
 class RefinedTest extends FunSuite with Matchers {
 
@@ -35,6 +36,12 @@ class RefinedTest extends FunSuite with Matchers {
     // and validates just the same
     """RefType.applyRefM[refinements.TwitterHandle]("foo")""" shouldNot compile
 
+    // alternatives using type companion
+    """refinements.Name("Peter")""" should compile
+    refinements.Name("Peter").value shouldBe "Peter"
+    """refinements.TwitterHandle("@kwarkk")""" should compile
+    refinements.TwitterHandle("@kwarkk").value shouldBe "@kwarkk"
+
   }
 
   test("runtime validation") {
@@ -43,7 +50,7 @@ class RefinedTest extends FunSuite with Matchers {
     // requires to pass the predicate, which for simple predicates is fine
     refineV[NonEmpty]("Peter") match {
       case Right(r) => r.value shouldBe "Peter"
-      case Left(e)  => fail(e)
+      case Left(e) => fail(e)
     }
 
     import eu.timepit.refined.api.RefType
@@ -51,23 +58,31 @@ class RefinedTest extends FunSuite with Matchers {
     // alternative using the type alias for the refined type
     RefType.applyRef[refinements.Name]("Peter") match {
       case Right(r) => r.value shouldBe "Peter"
-      case Left(e)  => fail(e)
+      case Left(e) => fail(e)
     }
 
     // comes in handy for complex predicates
     RefType.applyRef[refinements.TwitterHandle]("@kwarkk") match {
       case Right(r) => r.value shouldBe "@kwarkk"
-      case Left(e)  => fail(e)
+      case Left(e) => fail(e)
     }
 
     RefType.applyRef[refinements.TwitterHandle]("foo") match {
       case Right(r) => fail("should fail")
-      case Left(e)  => succeed
+      case Left(e) => succeed
     }
 
+    // alternatives using type companion
+    refinements.Name.from("Peter") match {
+      case Right(r) => r.value shouldBe "Peter"
+      case Left(e) => fail(e)
+    }
+
+    refinements.TwitterHandle.from("@kwarkk") match {
+      case Right(r) => r.value shouldBe "@kwarkk"
+      case Left(e) => fail(e)
+    }
 
   }
-
-
 
 }

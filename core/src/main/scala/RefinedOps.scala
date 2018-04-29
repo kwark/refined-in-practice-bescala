@@ -8,24 +8,23 @@ object RefinedOps {
     def concat(t1: T, t2: T): T
   }
 
-  implicit val refinedNonEmptyStringOps = new RefinedStringOps[NonEmptyString] {
-    override def concat(t1: NonEmptyString, t2: NonEmptyString): NonEmptyString =
-      Refined.unsafeApply(t1.value + t2.value)
-  }
+  implicit val refinedNonEmptyStringOps: RefinedStringOps[NonEmptyString] =
+    (t1: NonEmptyString, t2: NonEmptyString) =>
+      NonEmptyString.unsafeFrom(t1.value + t2.value)
 
   trait RefinedIntOps[T] {
     def unsafeAdd(t1: T, t2: T): T
     def add(t1: T, t2: T): Option[T]
   }
 
-  implicit val refinedPosIntOps = new RefinedIntOps[PosInt] {
+  implicit val refinedPosIntOps: RefinedIntOps[PosInt] = new RefinedIntOps[PosInt] {
 
     override def unsafeAdd(x: PosInt, y: PosInt): PosInt =
-      Refined.unsafeApply(x.value + y.value)
+      PosInt.unsafeFrom(x.value + y.value)
 
 
     override def add(x: PosInt, y: PosInt): Option[PosInt] =
-      RefType.applyRef[PosInt](x.value + y.value).toOption
+      PosInt.unapply(x.value + y.value)
 
   }
 

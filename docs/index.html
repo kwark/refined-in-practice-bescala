@@ -42,7 +42,7 @@ background-image: url(background.jpg)
 
 # Refinement Types In Practice
 ## <span style="color:white">Peter Mortier</span>
-## <span style="color:white">December 2017</span>
+## <span style="color:white">April 2018</span>
 
 <span style="color:white">GitHub: [@kwark](https://github.com/kwark) /
     Twitter: [@kwarkk](https://twitter.com/kwarkk)</span>
@@ -88,6 +88,8 @@ Pizza was invented by Martin Odersky and he later worked on the java compiler to
 * Play integration
 
 * Extension methods
+
+* Newtyping
 
 ---
 
@@ -431,7 +433,7 @@ type TwitterHandle = String Refined StartsWith["@"]
 This is already available in:
 * [Dotty](http://dotty.epfl.ch/docs/reference/singleton-types.html)
 * [Typelevel scala (-Yliteral-types)](https://typelevel.org/scala/)
-* [scala 2.12.5 maybe, 2.13 definitely](https://github.com/scala/scala/pull/5310)
+* [2.13.0-M3](https://github.com/scala/scala/pull/5310)
 
 ---
 ## Try it out by yourself
@@ -517,7 +519,7 @@ import eu.timepit.refined.api.RefType
 
 ```scala
 scala> RefType.applyRefM[refinements.Name]("Peter Mortier")
-res8: refinements.Name = Peter Mortier
+res4: refinements.Name = Peter Mortier
 ```
 
 --
@@ -528,7 +530,6 @@ scala> RefType.applyRefM[refinements.TwitterHandle]("wrong")
        RefType.applyRefM[refinements.TwitterHandle]("wrong")
                                                    ^
 ```
-
 ---
 # Refining runtime values
 
@@ -539,7 +540,7 @@ scala> val name: String = "Peter Mortier"
 name: String = Peter Mortier
 
 scala> RefType.applyRef[refinements.Name](name)
-res10: Either[String,refinements.Name] = Right(Peter Mortier)
+res6: Either[String,refinements.Name] = Right(Peter Mortier)
 ```
 
 --
@@ -549,26 +550,61 @@ scala> val handle: String = "wrong"
 handle: String = wrong
 
 scala> RefType.applyRef[refinements.TwitterHandle](handle)
-res11: Either[String,refinements.TwitterHandle] = Left(Predicate failed: "wrong".startsWith("@").)
+res7: Either[String,refinements.TwitterHandle] = Left(Predicate failed: "wrong".startsWith("@").)
 ```
+
+---
+# Refining with RefinedTypeOps
+
+* new since refined `0.8.5`
+
+```scala
+scala> import eu.timepit.refined.numeric.Positive
+import eu.timepit.refined.numeric.Positive
+
+scala> import eu.timepit.refined.api.RefinedTypeOps
+import eu.timepit.refined.api.RefinedTypeOps
+
+scala> type PosInt = Int Refined Positive
+defined type alias PosInt
+
+scala> object PosInt extends RefinedTypeOps[PosInt, Int]
+defined object PosInt
+
+scala> val five: PosInt = PosInt(5)
+five: PosInt = 5
+
+scala> val result: Either[String, PosInt] = PosInt.from(4)
+result: Either[String,PosInt] = Right(4)
+```
+--
+
+
+* `def apply(t: T): RT` => compile time refinement
+* `def from(t: T): Either[String, RT]` => runtime refinement
+* `def unapply(t: T): Option[RT]` => pattern matching
+
+???
+single line of boilerplate required
 
 ---
 # Refinement recap
 
-<!--Using **Predicate**-->
-
-<!--|                |                  |-->
-<!--| -&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;  | -&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;                  |-->
-<!--| compile time   | `eu.timepit.refined.refineMV[P]` |-->
-<!--| runtime        | `eu.timepit.refined.refineV[P]`  |-->
-<!--<br/>-->
-
-Using **Refined type**
+* Using ** eu.timepit.refined.api.RefType **
 
 |                |                                  |
 | -------------  | ---------------                  |
-| compile time   | `eu.timepit.refined.api.RefType.applyRefM[RT]: RT` |
-| runtime        | `eu.timepit.refined.api.RefType.applyRef[RT]: Either[String, RT]`  |
+| compile time   | `RefType.applyRefM[RT](t: T): RT` |
+| runtime        | `RefType.applyRef[RT](t: T): Either[String, RT]`  |
+
+--
+<br/>
+* Using ** refined type's companion **
+
+|                |                                  |
+| -------------  | ---------------                  |
+| compile time   | `RT.apply(t: T): RT` |
+| runtime        | `RT.from(t: T): Either[String, RT]`  |
 
 ---
 class: center, middle
@@ -694,7 +730,7 @@ exclude: true
 
 * `eu.timepit.refined.types.char`: `LowerCaseChar`, `UpperCaseChar`
 
-* `eu.timepit.refined.types.string`: `NonEmptyString`
+* `eu.timepit.refined.types.string`: `NonEmptyString`, `FiniteString[N]`
 
 * `eu.timepit.refined.types.numeric`: `PosInt`, `NonNegInt`, `NegInt`, ...
 
@@ -987,7 +1023,6 @@ Retrieving a developer from the DB using a slick query
 db.run(developers.filter(_.twitter.like("%kwa%")).result)
 ```
 ---
-exclude: true
 # Plain SQL query support
 
 > *As an alternative to Scala queries you can write queries and other database statements in SQL. This is done with string interpolators.*
@@ -1018,7 +1053,7 @@ Json.toJson(Developer("Peter Mortier", "@kwarkk"))
 ```
 
 ???
-We are going to ask play to automaticall derive a Json formatter for our Developer class
+We are going to ask Play to automatically derive a Json formatter for our Developer class
 
 Play uses a macro to inspect the Developer case class
 
@@ -1062,8 +1097,6 @@ create a new Format and implement two methods
 * But lots of boilerplate if we need to write this for every refined type
 
 ---
-exclude: true
-
 # Manual Form binding
 
 ```scala
@@ -1125,7 +1158,6 @@ Json.
 ```
 
 --
-exclude: true
 ```
 import improved_refinements._
 import be.venneborg.refined.play.RefinedForms._
@@ -1173,7 +1205,7 @@ trait RefinedStringOps[T] {
 implicit val refinedNonEmptyStringOps = new RefinedStringOps[NonEmptyString] {
 
   override def concat(x: NonEmptyString, y: NonEmptyString): NonEmptyString =
-    Refined.unsafeApply(x.value + y.value)
+    NonEmptyString.unsafeFrom(x.value + y.value)
 
 }
 ```
@@ -1191,16 +1223,207 @@ trait RefinedIntOps[T] {
 implicit val refinedPosIntOps = new RefinedIntOps[PosInt] {
 
   override def unsafeAdd(x: PosInt, y: PosInt): PosInt =
-    Refined.unsafeApply(x.value + y.value)
+    PosInt.unsafeFrom(x.value + y.value)
 
   override def add(x: PosInt, y: PosInt): Option[PosInt] =
-    RefType.applyRef[PosInt](x.value + y.value).toOption
+    PosInt.unapply(x.value + y.value)
 
 }
 ```
 ???
 
-use property-based testing with scalacheck to check your assumptions
+use property-based testing with scalacheck to check your assumptions: show RefinedOpsTest
+
+---
+# Discriminating refined types
+
+```scala
+val firstName: Name = "Peter"
+val lastName: Name = "Mortier"
+```
+--
+How can I prevent swapping bugs?
+
+--
+
+Using type aliases: no
+
+--
+
+Using a value class?
+
+```scala
+scala> class FirstName(val name: Name) extends AnyVal
+<console>:70: error: value class may not wrap another user-defined value class
+       class FirstName(val name: Name) extends AnyVal
+                           ^
+```
+
+--
+
+```scala
+error: value class may not wrap another user-defined value class
+       class FirstName(val name: Name) extends AnyVal
+```
+
+---
+# Newtype
+
+--
+
+In Haskell:
+
+> *A common programming practice is to define a type whose representation is identical to an existing one but which has a separate identity in the type system.
+In Haskell, the newtype declaration creates a new type from an existing one.*
+
+--
+
+In scala use tagging:
+
+> *Tag instances with arbitrary types. Useful if you'd like to differentiate between instances on the type level without runtime overhead.
+  Tags are only used at compile-time to provide additional type safety.*
+
+--
+
+Different tagging libraries:
+
+  * [SoftwareMill](https://github.com/softwaremill/scala-common#tagging): lastest version `2.2.1` works
+  * [Supertagged](https://github.com/rudogma/scala-supertagged)
+  * [Shapeless](https://github.com/milessabin/shapeless/blob/4bf0263d402f852c4786111796cdcf869fe3bd65/core/src/main/scala/shapeless/typeoperators.scala#L25): unfortunately current version can NOT tag value classes
+
+---
+# Let's take supertagged for a spin
+
+```scala
+libraryDependencies += "org.rudogma" %% "supertagged" % "1.4",
+```
+
+--
+
+```scala
+scala> import supertagged._
+import supertagged._
+
+scala> import improved_refinements._
+import improved_refinements._
+
+scala> import eu.timepit.refined.types.numeric.PosLong
+import eu.timepit.refined.types.numeric.PosLong
+
+scala> trait DeveloperIdTag
+defined trait DeveloperIdTag
+
+scala> type DeveloperId = PosLong @@ DeveloperIdTag
+defined type alias DeveloperId
+
+scala> trait FirstNameTag
+defined trait FirstNameTag
+
+scala> type FirstName = Name @@ FirstNameTag
+defined type alias FirstName
+
+scala> val firstName: Name @@ FirstNameTag = tag[FirstNameTag](Name("Peter"))
+firstName: improved_refinements.Name @@ FirstNameTag = Peter
+
+scala> val anotherFirstName: FirstName =
+     |   tag[FirstNameTag](Name("Bart")).asInstanceOf[FirstName]
+anotherFirstName: FirstName = Bart
+```
+
+--
+
+```scala
+scala> class TaggedTypeOps[TT, T, U](implicit ev: @@[T, U] =:= TT) {
+     |   def apply(t: T): TT = tag[U](t).asInstanceOf[TT]
+     | }
+defined class TaggedTypeOps
+
+scala> object DeveloperId extends TaggedTypeOps[DeveloperId, PosLong, DeveloperIdTag]
+defined object DeveloperId
+
+scala> val myId: DeveloperId = DeveloperId(PosLong(5))
+myId: DeveloperId = 5
+```
+
+---
+# supertagged Developer
+
+```scala
+scala> import supertagging._
+import supertagging._
+
+scala> case class Developer(id: Option[DeveloperId],
+     |                      twitterHandle: TwitterHandle,
+     |                      firstName: FirstName,
+     |                      lastName: LastName)
+defined class Developer
+```
+---
+# supertagged schema
+
+```scala
+scala> object SupertaggedSchema {
+     | 
+     |   import MyRefinedSlickProfile.api._
+     |   import MyRefinedSlickProfile.mapping._
+     | 
+     |   // some necessary boilerplate. I haven't found a way (yet) to get rid of this
+     |   implicit val developerIdIso =
+     |     new Isomorphism[DeveloperId, PosLong](identity, DeveloperId(_))
+     |   implicit val firstNameIso =
+     |     new Isomorphism[FirstName, Name](identity, FirstName(_))
+     |   implicit val lastNameIso =
+     |     new Isomorphism[LastName, Name](identity, LastName(_))
+     | 
+     |   class Developers(tag: Tag) extends Table[Developer](tag, "DEVELOPERS") {
+     |     def id = column[DeveloperId]("ID", O.PrimaryKey, O.AutoInc)
+     |     def twitter = column[TwitterHandle]("TWITTER")
+     |     def firstName    = column[FirstName]("FIRSTNAME")
+     |     def lastName    = column[LastName]("LASTNAME")
+     | 
+     |     def * = (id.?, twitter, firstName, lastName).mapTo[Developer]
+     |   }
+     | 
+     |   val developers = TableQuery[Developers]
+     | 
+     | }
+defined object SupertaggedSchema
+```
+---
+Storing/querying supertagged Developer
+
+```scala
+scala> val developer = Developer(
+     |   None,
+     |   TwitterHandle("@kwarkk"),
+     |   FirstName(Name("Peter")),
+     |   LastName(Name("Mortier"))
+     | )
+developer: Developer = Developer(None,@kwarkk,Peter,Mortier)
+```
+
+```scala
+db.run(developers.insert(developer))
+
+db.run(developers
+  .filter(_.firstName.asInstanceOf[Rep[Name]].ilike("%ete%"))
+  .result
+)
+```
+---
+Json serialization of supertagged Developer
+
+```scala
+scala> implicit def taggedReads[T, U](implicit reads: Reads[T]): Reads[T @@ U] =
+     |     reads.map(tag[U].apply(_))
+taggedReads: [T, U](implicit reads: play.api.libs.json.Reads[T])play.api.libs.json.Reads[T @@ U]
+
+scala> implicit val developerFormat = Json.format[Developer]
+developerFormat: play.api.libs.json.OFormat[Developer] = play.api.libs.json.OFormat$$anon$1@506b5879
+
+scala> Json.toJson(developer)
+res9: play.api.libs.json.JsValue = {"twitterHandle":"@kwarkk","firstName":"Peter","lastName":"Mortier"}
+```
 
 ---
 # Refined gotcha's
@@ -1210,6 +1433,9 @@ use property-based testing with scalacheck to check your assumptions
 
 .image-half[![Witness](./witness_macro_intellj.png)]
 .image-half[![Macro](refined_auto_macro_intellij.png)]
+
+--
+squigglies are gone in latest releases `2018.1.x` !!!
 
 --
 * Watch-out when using infix type notation!
@@ -1250,7 +1476,6 @@ opaque types SIP
 * compile time refinement of literal values
 
 ---
-exclude: true
 # Alternatives
 
 * [Bond](https://github.com/fwbrasil/bond)
@@ -1285,6 +1510,7 @@ exclude: true
 ### Other
 * [Monocle](https://github.com/julien-truffaut/Monocle) -- lens library
 * [Decline](https://github.com/bkirwi/decline) -- command line parsing
+* [Scopt](https://github.com/fthomas/refined)  -- command line parsing
 * [Quasar](https://github.com/quasar-analytics/quasar) -- NoSql analytics engine
 * [kantan.codecs](https://github.com/nrinaudo/kantan.codecs) -- Codecs f.e. for CSV parsing
 ---
@@ -1299,7 +1525,6 @@ exclude: true
 * Links to even more resources in [Refined wiki](https://github.com/fthomas/refined/wiki/Resources)
 
 ---
-exclude: true
 class: center, middle
 
 .image-half[![Static typing](./degoes_tweet.png)]
@@ -1308,11 +1533,9 @@ class: center, middle
 class: center, middle
 
 # Thanks!
-Code and slides at `kwark/refined-in-practice` on GitHub
+Code and slides at `kwark/refined-in-practice-bescala` on GitHub
 
-Presentation available at https://kwark.github.io/refined-in-practice
-
-This presentation will be soon available on the Scala eXchange London website at the following link: https://skillsmatter.com/conferences/8784-scala-exchange-2017#skillscasts
+Presentation available at https://kwark.github.io/refined-in-practice-bescala
 
 ???
 

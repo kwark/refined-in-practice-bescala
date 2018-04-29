@@ -1,13 +1,11 @@
-import eu.timepit.refined.api.RefType
 import eu.timepit.refined.types.string._
 import eu.timepit.refined.types.numeric._
-import eu.timepit.refined.collection.NonEmpty
-import eu.timepit.refined.scalacheck.arbitraryRefType
 import org.scalatest.{FunSuite, Matchers}
-import org.scalacheck.{Arbitrary, Gen}
 import org.scalatest.prop.PropertyChecks
 import RefinedOps._
 import eu.timepit.refined.types.numeric
+import eu.timepit.refined.scalacheck.string.nonEmptyStringArbitrary
+import eu.timepit.refined.scalacheck.numeric._
 
 class RefinedOpsTest extends FunSuite with Matchers with PropertyChecks {
 
@@ -27,19 +25,12 @@ class RefinedOpsTest extends FunSuite with Matchers with PropertyChecks {
     }
   }
 
-  test("PosInt unsafeAdd") {
+  ignore("PosInt unsafeAdd") {
     forAll { (i1: PosInt, i2: PosInt) =>
       val ev = implicitly[RefinedIntOps[PosInt]]
       // This test fails sometimes, because of int overflow
-      // ev.unsafeAdd(i1, i2) .value should be > 0
+       ev.unsafeAdd(i1, i2).value should be > 0
     }
   }
-
-  implicit def nonEmptyStringArbitrary[F[_, _]](implicit rt: RefType[F]): Arbitrary[F[String, NonEmpty]] =
-    arbitraryRefType(Arbitrary.arbString.arbitrary.filter(_.nonEmpty))
-
-
-  implicit val postIntArbitrary: Arbitrary[PosInt] =
-    arbitraryRefType(Gen.chooseNum(1, Integer.MAX_VALUE))
 
 }

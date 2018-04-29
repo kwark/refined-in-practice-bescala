@@ -1,4 +1,4 @@
-import eu.timepit.refined.api.Refined
+import eu.timepit.refined.api.{Refined, RefinedTypeOps}
 import eu.timepit.refined.boolean.{AllOf, And, Not, Or}
 import eu.timepit.refined.string.{MatchesRegex, StartsWith}
 import eu.timepit.refined.W
@@ -18,7 +18,11 @@ object improved_refinements {
     HNil
   ]
 
+  object TwitterHandle extends RefinedTypeOps[TwitterHandle, String]
+
   type Name = String Refined And[NonEmpty, MaxSize[W.`256`.T]]
+
+  object Name extends RefinedTypeOps[Name, String]
 
   final case class Developer(name: Name, twitterHandle: TwitterHandle)
 
