@@ -544,7 +544,8 @@ RefType.applyRef[refinements.TwitterHandle](handle)
 * new since refined `0.8.5`
 
 --
-```tut
+
+```tut:silent
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.api.RefinedTypeOps
 
@@ -554,6 +555,7 @@ object PosInt extends RefinedTypeOps[PosInt, Int]
 val five: PosInt = PosInt(5)
 val result: Either[String, PosInt] = PosInt.from(4)
 ```
+
 --
 
 

@@ -564,25 +564,18 @@ res7: Either[String,refinements.TwitterHandle] = Left(Predicate failed: "wrong".
 * new since refined `0.8.5`
 
 --
-```scala
-scala> import eu.timepit.refined.numeric.Positive
-import eu.timepit.refined.numeric.Positive
 
-scala> import eu.timepit.refined.api.RefinedTypeOps
+```scala
+import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.api.RefinedTypeOps
 
-scala> type PosInt = Int Refined Positive
-defined type alias PosInt
+type PosInt = Int Refined Positive
+object PosInt extends RefinedTypeOps[PosInt, Int]
 
-scala> object PosInt extends RefinedTypeOps[PosInt, Int]
-defined object PosInt
-
-scala> val five: PosInt = PosInt(5)
-five: PosInt = 5
-
-scala> val result: Either[String, PosInt] = PosInt.from(4)
-result: Either[String,PosInt] = Right(4)
+val five: PosInt = PosInt(5)
+val result: Either[String, PosInt] = PosInt.from(4)
 ```
+
 --
 
 
