@@ -1226,11 +1226,12 @@ How can I prevent swapping bugs?
 Using type aliases?
 --
  no
+
 --
 
 Using a value class?
 
-```tut:fail
+```tut:fail:silent
 class FirstName(val name: Name) extends AnyVal
 ```
 
@@ -1275,7 +1276,7 @@ libraryDependencies += "org.rudogma" %% "supertagged" % "1.4",
 
 --
 
-```tut
+```tut:silent
 import supertagged._
 import improved_refinements._
 import eu.timepit.refined.types.numeric.PosLong
@@ -1292,13 +1293,16 @@ val anotherFirstName: FirstName =
   tag[FirstNameTag](Name("Bart")).asInstanceOf[FirstName]
 ```
 
---
+---
+# Getting rid of asInstanceOf
 
-```tut
+```tut:silent
 class TaggedTypeOps[TT, T, U](implicit ev: @@[T, U] =:= TT) {
   def apply(t: T): TT = tag[U](t).asInstanceOf[TT]
 }
 
+trait DeveloperIdTag
+type DeveloperId = PosLong @@ DeveloperIdTag
 object DeveloperId extends TaggedTypeOps[DeveloperId, PosLong, DeveloperIdTag]
 
 val myId: DeveloperId = DeveloperId(PosLong(5))
@@ -1307,7 +1311,7 @@ val myId: DeveloperId = DeveloperId(PosLong(5))
 ---
 # supertagged Developer
 
-```tut
+```tut:silent
 import supertagging._
 
 case class Developer(id: Option[DeveloperId],
@@ -1318,7 +1322,7 @@ case class Developer(id: Option[DeveloperId],
 ---
 # supertagged schema
 
-```tut
+```tut:silent
 object SupertaggedSchema {
 
   import MyRefinedSlickProfile.api._
@@ -1346,9 +1350,9 @@ object SupertaggedSchema {
 }
 ```
 ---
-Storing/querying supertagged Developer
+# Storing/querying supertagged Developer
 
-```tut
+```tut:silent
 val developer = Developer(
   None,
   TwitterHandle("@kwarkk"),
@@ -1356,6 +1360,8 @@ val developer = Developer(
   LastName(Name("Mortier"))
 )
 ```
+
+--
 
 ```scala
 db.run(developers.insert(developer))
@@ -1366,9 +1372,9 @@ db.run(developers
 )
 ```
 ---
-Json serialization of supertagged Developer
+# Json serialization of supertagged Developer
 
-```tut
+```tut:silent
 implicit def taggedReads[T, U](implicit reads: Reads[T]): Reads[T @@ U] =
     reads.map(tag[U].apply(_))
 
@@ -1387,6 +1393,7 @@ Json.toJson(developer)
 .image-half[![Macro](refined_auto_macro_intellij.png)]
 
 --
+
 squigglies are gone in latest releases `2018.1.x` !!!
 
 --

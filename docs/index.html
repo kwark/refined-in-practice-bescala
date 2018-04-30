@@ -563,6 +563,7 @@ res7: Either[String,refinements.TwitterHandle] = Left(Predicate failed: "wrong".
 
 * new since refined `0.8.5`
 
+--
 ```scala
 scala> import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.numeric.Positive
@@ -1257,15 +1258,13 @@ How can I prevent swapping bugs?
 Using type aliases?
 --
  no
+
 --
 
 Using a value class?
 
 ```scala
-scala> class FirstName(val name: Name) extends AnyVal
-<console>:70: error: value class may not wrap another user-defined value class
-       class FirstName(val name: Name) extends AnyVal
-                           ^
+class FirstName(val name: Name) extends AnyVal
 ```
 
 --
@@ -1310,106 +1309,91 @@ libraryDependencies += "org.rudogma" %% "supertagged" % "1.4",
 --
 
 ```scala
-scala> import supertagged._
 import supertagged._
-
-scala> import improved_refinements._
 import improved_refinements._
-
-scala> import eu.timepit.refined.types.numeric.PosLong
 import eu.timepit.refined.types.numeric.PosLong
 
-scala> trait DeveloperIdTag
-defined trait DeveloperIdTag
+trait DeveloperIdTag
+type DeveloperId = PosLong @@ DeveloperIdTag
 
-scala> type DeveloperId = PosLong @@ DeveloperIdTag
-defined type alias DeveloperId
+trait FirstNameTag
+type FirstName = Name @@ FirstNameTag
 
-scala> trait FirstNameTag
-defined trait FirstNameTag
+val firstName: Name @@ FirstNameTag = tag[FirstNameTag](Name("Peter"))
 
-scala> type FirstName = Name @@ FirstNameTag
-defined type alias FirstName
-
-scala> val firstName: Name @@ FirstNameTag = tag[FirstNameTag](Name("Peter"))
-firstName: improved_refinements.Name @@ FirstNameTag = Peter
-
-scala> val anotherFirstName: FirstName =
-     |   tag[FirstNameTag](Name("Bart")).asInstanceOf[FirstName]
-anotherFirstName: FirstName = Bart
+val anotherFirstName: FirstName =
+  tag[FirstNameTag](Name("Bart")).asInstanceOf[FirstName]
 ```
 
---
+---
+# Getting rid of asInstanceOf
 
 ```scala
-scala> class TaggedTypeOps[TT, T, U](implicit ev: @@[T, U] =:= TT) {
-     |   def apply(t: T): TT = tag[U](t).asInstanceOf[TT]
-     | }
-defined class TaggedTypeOps
+class TaggedTypeOps[TT, T, U](implicit ev: @@[T, U] =:= TT) {
+  def apply(t: T): TT = tag[U](t).asInstanceOf[TT]
+}
 
-scala> object DeveloperId extends TaggedTypeOps[DeveloperId, PosLong, DeveloperIdTag]
-defined object DeveloperId
+trait DeveloperIdTag
+type DeveloperId = PosLong @@ DeveloperIdTag
+object DeveloperId extends TaggedTypeOps[DeveloperId, PosLong, DeveloperIdTag]
 
-scala> val myId: DeveloperId = DeveloperId(PosLong(5))
-myId: DeveloperId = 5
+val myId: DeveloperId = DeveloperId(PosLong(5))
 ```
 
 ---
 # supertagged Developer
 
 ```scala
-scala> import supertagging._
 import supertagging._
 
-scala> case class Developer(id: Option[DeveloperId],
-     |                      twitterHandle: TwitterHandle,
-     |                      firstName: FirstName,
-     |                      lastName: LastName)
-defined class Developer
+case class Developer(id: Option[DeveloperId],
+                     twitterHandle: TwitterHandle,
+                     firstName: FirstName,
+                     lastName: LastName)
 ```
 ---
 # supertagged schema
 
 ```scala
-scala> object SupertaggedSchema {
-     | 
-     |   import MyRefinedSlickProfile.api._
-     |   import MyRefinedSlickProfile.mapping._
-     | 
-     |   // some necessary boilerplate. I haven't found a way (yet) to get rid of this
-     |   implicit val developerIdIso =
-     |     new Isomorphism[DeveloperId, PosLong](identity, DeveloperId(_))
-     |   implicit val firstNameIso =
-     |     new Isomorphism[FirstName, Name](identity, FirstName(_))
-     |   implicit val lastNameIso =
-     |     new Isomorphism[LastName, Name](identity, LastName(_))
-     | 
-     |   class Developers(tag: Tag) extends Table[Developer](tag, "DEVELOPERS") {
-     |     def id = column[DeveloperId]("ID", O.PrimaryKey, O.AutoInc)
-     |     def twitter = column[TwitterHandle]("TWITTER")
-     |     def firstName    = column[FirstName]("FIRSTNAME")
-     |     def lastName    = column[LastName]("LASTNAME")
-     | 
-     |     def * = (id.?, twitter, firstName, lastName).mapTo[Developer]
-     |   }
-     | 
-     |   val developers = TableQuery[Developers]
-     | 
-     | }
-defined object SupertaggedSchema
+object SupertaggedSchema {
+
+  import MyRefinedSlickProfile.api._
+  import MyRefinedSlickProfile.mapping._
+
+  // some necessary boilerplate. I haven't found a way (yet) to get rid of this
+  implicit val developerIdIso =
+    new Isomorphism[DeveloperId, PosLong](identity, DeveloperId(_))
+  implicit val firstNameIso =
+    new Isomorphism[FirstName, Name](identity, FirstName(_))
+  implicit val lastNameIso =
+    new Isomorphism[LastName, Name](identity, LastName(_))
+
+  class Developers(tag: Tag) extends Table[Developer](tag, "DEVELOPERS") {
+    def id = column[DeveloperId]("ID", O.PrimaryKey, O.AutoInc)
+    def twitter = column[TwitterHandle]("TWITTER")
+    def firstName    = column[FirstName]("FIRSTNAME")
+    def lastName    = column[LastName]("LASTNAME")
+
+    def * = (id.?, twitter, firstName, lastName).mapTo[Developer]
+  }
+
+  val developers = TableQuery[Developers]
+
+}
 ```
 ---
-Storing/querying supertagged Developer
+# Storing/querying supertagged Developer
 
 ```scala
-scala> val developer = Developer(
-     |   None,
-     |   TwitterHandle("@kwarkk"),
-     |   FirstName(Name("Peter")),
-     |   LastName(Name("Mortier"))
-     | )
-developer: Developer = Developer(None,@kwarkk,Peter,Mortier)
+val developer = Developer(
+  None,
+  TwitterHandle("@kwarkk"),
+  FirstName(Name("Peter")),
+  LastName(Name("Mortier"))
+)
 ```
+
+--
 
 ```scala
 db.run(developers.insert(developer))
@@ -1420,18 +1404,15 @@ db.run(developers
 )
 ```
 ---
-Json serialization of supertagged Developer
+# Json serialization of supertagged Developer
 
 ```scala
-scala> implicit def taggedReads[T, U](implicit reads: Reads[T]): Reads[T @@ U] =
-     |     reads.map(tag[U].apply(_))
-taggedReads: [T, U](implicit reads: play.api.libs.json.Reads[T])play.api.libs.json.Reads[T @@ U]
+implicit def taggedReads[T, U](implicit reads: Reads[T]): Reads[T @@ U] =
+    reads.map(tag[U].apply(_))
 
-scala> implicit val developerFormat = Json.format[Developer]
-developerFormat: play.api.libs.json.OFormat[Developer] = play.api.libs.json.OFormat$$anon$1@17fa121a
+implicit val developerFormat = Json.format[Developer]
 
-scala> Json.toJson(developer)
-res9: play.api.libs.json.JsValue = {"twitterHandle":"@kwarkk","firstName":"Peter","lastName":"Mortier"}
+Json.toJson(developer)
 ```
 
 ---
@@ -1444,6 +1425,7 @@ res9: play.api.libs.json.JsValue = {"twitterHandle":"@kwarkk","firstName":"Peter
 .image-half[![Macro](refined_auto_macro_intellij.png)]
 
 --
+
 squigglies are gone in latest releases `2018.1.x` !!!
 
 --
