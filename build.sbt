@@ -23,6 +23,7 @@ lazy val `refined-in-practice` = project.in(file("."))
 
 lazy val core = project
   .settings(moduleName := "refined-in-practice-core")
+  .settings(addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full))
   .settings(baseSettings: _*)
   .settings(libraryDependencies ++= Seq(
     // normal deps
@@ -30,10 +31,11 @@ lazy val core = project
     "com.typesafe.slick" %% "slick"            % "3.2.3",
     "com.typesafe.slick" %% "slick-hikaricp"   % "3.2.3",
     "com.typesafe.play"  %% "play-json"        % "2.6.9",
-    "be.venneborg"       %% "slick-refined"    % "0.1.0",
-    "be.venneborg"       %% "play26-refined"   % "0.1.0",
+    "be.venneborg"       %% "slick-refined"    % "0.2.0",
+    "be.venneborg"       %% "play26-refined"   % "0.2.0",
     "org.rudogma"        %% "supertagged"      % "1.4",
     "com.softwaremill.common" %% "tagging"     % "2.2.1",
+    "com.github.mpilquist" %% "simulacrum"     % "0.12.0",
     // test deps
     "org.scalatest"      %% "scalatest"          % "3.0.5"    % "test",
     "eu.timepit"         %% "refined-scalacheck" % "0.9.0"    % "test",

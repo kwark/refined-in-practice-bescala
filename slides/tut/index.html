@@ -89,7 +89,7 @@ Pizza was invented by Martin Odersky and he later worked on the java compiler to
 
 * Extension methods
 
-* Newtyping
+* Newtyping, tagging
 
 ---
 
@@ -348,6 +348,11 @@ Examples:
 
 There already exists a Scala [refined](https://github.com/fthomas/refined) library by Frank Thomas.
 
+```
+libraryDependencies += "eu.timepit" %% "refined" % "0.9.0"
+```
+--
+
 ```tut:silent
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.collection.NonEmpty
@@ -538,6 +543,7 @@ RefType.applyRef[refinements.TwitterHandle](handle)
 
 * new since refined `0.8.5`
 
+--
 ```tut
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.api.RefinedTypeOps
@@ -925,7 +931,7 @@ db.run(developers.filter(_.twitter.asInstanceOf[Rep[String]].like("%k%")).result
 # Integration library for Refined and Slick
 
 ```scala
-libraryDependencies += "be.venneborg" %% "slick-refined" % "0.1.0"
+libraryDependencies += "be.venneborg" %% "slick-refined" % "0.2.0"
 ```
 
 --
@@ -1099,7 +1105,7 @@ implicit val twitterHandleFormatter = new Formatter[TwitterHandle] {
 # Play-refined integration library
 
 ```scala
-libraryDependencies += "be.venneborg" %% "play26-refined" % "0.1.0"
+libraryDependencies += "be.venneborg" %% "play26-refined" % "0.2.0"
 ```
 --
 
@@ -1208,7 +1214,7 @@ use property-based testing with scalacheck to check your assumptions: show Refin
 ---
 # Discriminating refined types
 
-```tut:silent
+```tut
 val firstName: Name = "Peter"
 val lastName: Name = "Mortier"
 ```
@@ -1217,8 +1223,9 @@ How can I prevent swapping bugs?
 
 --
 
-Using type aliases: no
-
+Using type aliases?
+--
+ no
 --
 
 Using a value class?
