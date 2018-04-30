@@ -36,7 +36,8 @@ class SoftwaremillTaggingTest extends FunSuite with BeforeAndAfterAll with Scala
     db.run(sql"""SELECT FIRSTNAME FROM DEVELOPERS WHERE TWITTER LIKE '%rkk'""".as[Name]).futureValue should contain theSameElementsAs Seq(developer.firstName.asInstanceOf[Name])
 
     // plain sql update
-    db.run(sqlu"""UPDATE DEVELOPERS SET FIRSTNAME = 'Pieter' WHERE ID = 1""").futureValue shouldBe 1
+    val pieter = Name("Pieter").taggedWith[FirstNameTag]
+    db.run(sqlu"""UPDATE DEVELOPERS SET FIRSTNAME = ${pieter} WHERE ID = 1""").futureValue shouldBe 1
 
   }
 

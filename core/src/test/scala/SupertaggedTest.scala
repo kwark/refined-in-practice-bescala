@@ -42,7 +42,7 @@ class SupertaggedTest extends FunSuite with BeforeAndAfterAll with ScalaFutures 
 
     // plain sql update
     val pieter = FirstName(Name("Pieter"))
-    db.run(sqlu"""UPDATE DEVELOPERS SET FIRSTNAME = '$pieter' WHERE ID = 1""").futureValue shouldBe 1
+    db.run(sqlu"""UPDATE DEVELOPERS SET FIRSTNAME = ${pieter} WHERE ID = 1""").futureValue shouldBe 1
 
   }
 
